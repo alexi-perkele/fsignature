@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     desc.add_options()
         ("help", "help and description")
         ("file", po::value<std::string>()->default_value("sig_test"), "file to process")
-        ("size", po::value<unsigned int>()->default_value(1024), "chunk size Kb")
+        ("size", po::value<size_t>()->default_value(5), "block size bytes")
         ("output", po::value<std::string>()->default_value("sig.out"), "output file");
         
     po::variables_map var_map;
@@ -39,12 +39,18 @@ int main(int argc, char **argv) {
     
     
     std::cout << "file:  " << var_map["file"].as<std::string>() << ".\n";
-    std::cout << "chunk size:  " << var_map["size"].as<unsigned int>() << "Kb" << ".\n";
+    std::cout << "chunk size:  " << var_map["size"].as<size_t>() << " bytes" << ".\n";
     std::cout << "output to:  " << var_map["output"].as<std::string>() << ".\n";
-
     
-    std::unique_ptr<Signature::Reader> rdr(new Signature::Reader(var_map["file"].as<std::string>()) );
-    std::unique_ptr<Signature::Logger> lgr(new Signature::Logger(var_map["output"].as<std::string>()) );
+    auto input_file = var_map["file"].as<std::string>();
+    auto block_size = var_map["size"].as<size_t>();
+    auto output_file = var_map["output"].as<std::string>();
+    
+    
+    std::unique_ptr<Signature::Reader> rdr(new Signature::Reader(input_file, block_size));
+    std::unique_ptr<Signature::Logger> lgr(new Signature::Logger(output_file) );
+    
+    rdr->Run();
     
     return 0;
 }
