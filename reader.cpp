@@ -1,9 +1,13 @@
 #include "reader.hpp"
+#include <cmath>
 #include <iostream>
 
 
 
-Signature::Reader::Reader(const std::string& filename, const size_t& chunk_size) : instream_(filename, std::ifstream::binary), buffer_(chunk_size,0), slice_s_(chunk_size)
+Signature::Reader::Reader(const std::string& filename, const size_t& chunk_size) :
+    instream_(filename, std::ifstream::binary)
+    , buffer_(chunk_size,0)
+    , slice_s_(chunk_size)
 {
     std::cout << "will read u all" << std::endl;
   //  buffer_(slice_s_, 0);
@@ -15,27 +19,28 @@ Signature::Reader::Reader(const std::string& filename, const size_t& chunk_size)
 }
 
 
-void Signature::Reader::Run()
+void Signature::Reader::Run(std::queue<std::string>& sigqueue)
 {
-    //instream_.seekg(0, instream_.end);
+    instream_.seekg(0, instream_.end);
     int file_len =  instream_.tellg();
     instream_.seekg(0, instream_.beg);
     
     std::cout << "File size: " << file_len << std::endl;
-    
-    int iter = file_len/slice_s_;
-    std::cout << "total chunks: " << iter << std::endl;
-    instream_.is_open() ? std::cout << "OPEN" << std::endl : std::cout<< "NOT OPEN" << std::endl;
-    instream_.read(buffer_.data(),  slice_s_);
-    std::cout << "File read done" << std::endl;
-    
-    for(const auto i : buffer_)
-    {
-        std::cout << i;
-    }
-    std::cout << std::endl;
 
+    instream_.is_open() ? std::cout << "OPEN" << std::endl : std::cout<< "NOT OPEN" << std::endl;
+    while(!instream_.eof())
+    {
+
+         instream_.read(buffer_.data(),  slice_s_); 
+        std::string s(buffer_.begin(), buffer_.end());
+
+        std::cout << "File read done " << s << std::endl;
+        sigqueue.
+
+      //  std::fill(buffer_.begin(), buffer_.end(), 0);
+    }
 }
+
 
 
 Signature::Reader::~Reader()

@@ -1,8 +1,11 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
+#include <boost/uuid/detail/md5.hpp>
+#include <boost/algorithm/hex.hpp>
 #include <iostream>
 #include <memory>
+#include <queue>
 
 #include "reader.hpp"
 #include "logger.hpp"
@@ -48,9 +51,11 @@ int main(int argc, char **argv) {
     
     
     std::unique_ptr<Signature::Reader> rdr(new Signature::Reader(input_file, block_size));
-    std::unique_ptr<Signature::Logger> lgr(new Signature::Logger(output_file) );
-    
-    rdr->Run();
+    std::unique_ptr<Signature::Logger> lgr(new Signature::Logger(output_file, block_size) );
+
+    std::queue<std::string> sigqueue;
+
+    rdr->Run(sigqueue);
     
     return 0;
 }
