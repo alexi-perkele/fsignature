@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     std::unique_ptr<Signature::Reader> rdr(new Signature::Reader(input_file, block_size));
     std::unique_ptr<Signature::Logger> lgr(new Signature::Logger(output_file, block_size) );
 
-    std::queue<std::string> sigqueue;
+    std::queue<std::unique_ptr<std::string>> sigqueue;
 
     rdr->Run(sigqueue);
     
