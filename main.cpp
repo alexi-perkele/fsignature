@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <queue>
+#include <thread>
 
 #include "reader.hpp"
 #include "logger.hpp"
@@ -53,9 +54,10 @@ int main(int argc, char **argv) {
     std::unique_ptr<Signature::Reader> rdr(new Signature::Reader(input_file, block_size));
     std::unique_ptr<Signature::Logger> lgr(new Signature::Logger(output_file, block_size) );
 
-    std::queue<std::unique_ptr<std::string>> sigqueue;
-
-    rdr->Run(sigqueue);
+    Signature::Queue sigqueue;
+    std::thread t1(&Signature::Reader::Run, rdr.get(), std::ref(sigqueue) );
+    t1.join();
+  //  rdr->Run(sigqueue);
     
     return 0;
 }

@@ -15,7 +15,7 @@ Signature::Reader::Reader(const std::string &filename, const size_t &chunk_size)
 }
 
 
-void Signature::Reader::Run(std::queue<std::unique_ptr<std::string>> &sigqueue) {
+void Signature::Reader::Run(Queue &sigqueue) {
     instream_.seekg(0, instream_.end);
     int file_len = instream_.tellg();
     instream_.seekg(0, instream_.beg);
@@ -28,7 +28,9 @@ void Signature::Reader::Run(std::queue<std::unique_ptr<std::string>> &sigqueue) 
         std::unique_ptr<std::string> strPtr(new std::string(buffer_.begin(), buffer_.end()));
 
         std::cout << "File read done " << *strPtr << std::endl;
+        std::unique_lock<std::mutex> lock(sigmutex);
         sigqueue.push(std::move(strPtr));
+        lock.unlock();
         std::fill(buffer_.begin(), buffer_.end(), 0);
     }
 }
