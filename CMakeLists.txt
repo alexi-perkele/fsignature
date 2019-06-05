@@ -5,11 +5,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 
 find_package(Boost COMPONENTS program_options REQUIRED)
 
-set(READER_SOURCES  reader.cpp)
-set(LOGGER_SOURCES  logger.cpp)
+set(WORKER_SOURCES reader.cpp)
+
 set(SIGNATURE_SOURCES main.cpp)
 
-add_executable(signature ${SIGNATURE_SOURCES} ${READER_SOURCES} ${LOGGER_SOURCES})
+add_executable(signature ${SIGNATURE_SOURCES} ${WORKER_SOURCES} )
 target_include_directories(signature PRIVATE ${BOOST_INCLUDE_DIRS})
 
 target_link_libraries(signature pthread ${Boost_LIBRARIES})
