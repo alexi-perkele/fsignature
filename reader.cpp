@@ -4,39 +4,66 @@
 #include <memory>
 
 
-Signature::Reader::Reader(const std::string &filename, const size_t &chunk_size) :
-        instream_(filename, std::ifstream::binary), buffer_(chunk_size, 0), slice_s_(chunk_size) {
-    std::cout << "will read u all" << std::endl;
-    //  buffer_(slice_s_, 0);
-    if (instream_) {
+Signature::Worker::Worker(const std::string &filename, const size_t &chunk_size) :
+        m_instream(filename, std::ifstream::binary)
+        , m_buffer(chunk_size, 0), m_slice_s(chunk_size)
+        , m_dataReady(false)
+        {
+    std::cout << "will read u all" << std::endl;//  m_buffer(m_slice_s, 0);
+    if (m_instream) {
         std::cout << "File opened" << std::endl;
     }
 
 }
 
 
-void Signature::Reader::Run(Queue &sigqueue) {
-    instream_.seekg(0, instream_.end);
-    int file_len = instream_.tellg();
-    instream_.seekg(0, instream_.beg);
+void Signature::Worker::Read(Queue &sigqueue) {
+    m_instream.seekg(0, m_instream.end);
+    int file_len = m_instream.tellg();
+    m_instream.seekg(0, m_instream.beg);
 
     std::cout << "File size: " << file_len << std::endl;
 
-    instream_.is_open() ? std::cout << "OPEN" << std::endl : std::cout << "NOT OPEN" << std::endl;
-    while (!instream_.eof()) {
-        instream_.read(buffer_.data(), slice_s_);
-        std::unique_ptr<std::string> strPtr(new std::string(buffer_.begin(), buffer_.end()));
+    m_instream.is_open() ? std::cout << "OPEN" << std::endl : std::cout << "NOT OPEN" << std::endl;
 
-        std::cout << "File read done " << *strPtr << std::endl;
-        std::unique_lock<std::mutex> lock(sigmutex);
+  //  std::unique_lock<std::mutex> locker(m_sigmutex, std::defer_lock);
+
+    while (!m_instream.eof()) {
+        m_instream.read(m_buffer.data(), m_slice_s);
+
+            std::unique_ptr<std::string> strPtr(new std::string(m_buffer.begin(), m_buffer.end()));
+
+            std::cout << "File read block" << std::endl;
+            std::lock_guard<std::mutex> lck(m_sigmutex);
+            sigqueue.push(std::move(strPtr));
+            m_condVar.notify_one();
+           // locker.unlock();
+            std::fill(m_buffer.begin(), m_buffer.end(), 0);
+        }
+      //  locker.lock();
+        std::cout << "END OF FILE!!" << std::endl;
+        std::unique_ptr<std::string> strPtr(new std::string());
+        std::lock_guard<std::mutex> lck(m_sigmutex);
         sigqueue.push(std::move(strPtr));
-        lock.unlock();
-        std::fill(buffer_.begin(), buffer_.end(), 0);
+
+    }
+
+
+void Signature::Worker::Log(Signature::Queue &sigquue) {
+
+
+    while(true){
+        std::unique_lock<std::mutex> locker(m_sigmutex);
+        m_condVar.wait(locker, [&]{return !sigquue.empty();});
+        std::cout << "start log" << std::endl;
+        auto val = std::move(sigquue.front());
+        sigquue.pop();
+        locker.unlock();
+        if (val->empty()) return;
     }
 }
 
-
-Signature::Reader::~Reader() {
+Signature::Worker::~Worker() {
     std::cout << "the end is near" << std::endl;
-    instream_.close();
+    m_instream.close();
 }

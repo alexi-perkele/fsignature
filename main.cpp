@@ -9,7 +9,6 @@
 #include <thread>
 
 #include "reader.hpp"
-#include "logger.hpp"
 
 namespace po = boost::program_options;
 
@@ -21,7 +20,7 @@ int main(int argc, char **argv) {
     desc.add_options()
         ("help", "help and description")
         ("file", po::value<std::string>()->default_value("sig_test"), "file to process")
-        ("size", po::value<size_t>()->default_value(5), "block size bytes")
+        ("size", po::value<size_t>()->default_value(1024), "block size bytes")
         ("output", po::value<std::string>()->default_value("sig.out"), "output file");
         
     po::variables_map var_map;
@@ -51,13 +50,16 @@ int main(int argc, char **argv) {
     auto output_file = var_map["output"].as<std::string>();
     
     
-    std::unique_ptr<Signature::Reader> rdr(new Signature::Reader(input_file, block_size));
-    std::unique_ptr<Signature::Logger> lgr(new Signature::Logger(output_file, block_size) );
+    std::unique_ptr<Signature::Worker> rdr(new Signature::Worker(input_file, block_size));
 
     Signature::Queue sigqueue;
-    std::thread t1(&Signature::Reader::Run, rdr.get(), std::ref(sigqueue) );
-    t1.join();
-  //  rdr->Run(sigqueue);
-    
+    std::vector<std::thread> threads;
+
+    threads.push_back(std::thread(&Signature::Worker::Read, rdr.get(), std::ref(sigqueue) ));
+    threads.push_back(std::thread(&Signature::Worker::Log, rdr.get(), std::ref(sigqueue) ));
+
+    std::for_each(threads.begin(), threads.end(),
+                  std::mem_fn(&std::thread::join));
+
     return 0;
 }

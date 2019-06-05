@@ -16,6 +16,6 @@ target_link_libraries(signature pthread ${Boost_LIBRARIES})
 
 install(TARGETS signature RUNTIME DESTINATION bin)
 
-add_custom_command(TARGET signature POST_BUILD
+add_custom_command(TARGET signature PRE_BUILD
                    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/touch_test.sh)
 
