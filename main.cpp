@@ -41,9 +41,9 @@ int main(int argc, char **argv) {
     }
     
     
-    std::cout << "file:  " << var_map["file"].as<std::string>() << ".\n";
-    std::cout << "chunk size:  " << var_map["size"].as<size_t>() << " bytes" << ".\n";
-    std::cout << "output to:  " << var_map["output"].as<std::string>() << ".\n";
+    std::cout << "file to process:  " << var_map["file"].as<std::string>() << "\n";
+    std::cout << "chunk size:  " << var_map["size"].as<size_t>() << " bytes" << "\n";
+    std::cout << "output to:  " << var_map["output"].as<std::string>() << "\n";
     
     auto input_file = var_map["file"].as<std::string>();
     auto block_size = var_map["size"].as<size_t>();
@@ -66,6 +66,6 @@ int main(int argc, char **argv) {
         std::cout << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
-
+    std::cout << "job is done" << std::endl;
     return 0;
 }
