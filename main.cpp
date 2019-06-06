@@ -60,17 +60,12 @@ int main(int argc, char **argv) {
         std::for_each(threads.begin(), threads.end(),
                       std::mem_fn(&std::thread::join));
     }
+
     catch(std::exception &e)
     {
         std::cout << e.what() << std::endl;
         exit(EXIT_FAILURE);
     }
-
-
-
-
-
-
 
     return 0;
 }

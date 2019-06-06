@@ -10,29 +10,21 @@ Signature::Worker::Worker(const std::string &infile, const std::string& outfile,
          , m_slice_s(chunk_size)
          , m_dataReady(false)
 {
-    try
-    {
-        m_instream.open(infile, std::ifstream::binary);
-        m_ofstream.open(outfile, std::ofstream::binary|std::ofstream::trunc);
-    }
-    catch (std::ios_base::failure& e) {
-        std::cerr << e.what() << '\n';
-        throw;
-    }
-    catch(const std::exception& e)
-    {
-        std::cout << e.what() << std::endl;
-        throw;
-    }
+    m_instream.open(infile, std::ifstream::binary);
+    if (!m_instream.is_open()) throw std::runtime_error("can't open input file");
+    m_ofstream.open(outfile, std::ofstream::binary|std::ofstream::trunc);
+    if (!m_ofstream.is_open()) throw std::runtime_error("can't open output file");
+
+    m_instream.seekg(0, m_instream.end);
+    size_t file_len = m_instream.tellg();
+    m_instream.seekg(0, m_instream.beg);
+    std::cout << "File size: " << file_len << std::endl;
+    if(file_len < m_slice_s) throw std::runtime_error("bad file size.");
+    m_instream.seekg(0, m_instream.beg);
 }
 
 
 void Signature::Worker::Read(Queue &sigqueue) {
-    m_instream.seekg(0, m_instream.end);
-    int file_len = m_instream.tellg();
-    m_instream.seekg(0, m_instream.beg);
-
-    std::cout << "File size: " << file_len << std::endl;
 
     while (!m_instream.eof()) {
         m_instream.read(m_buffer.data(), m_slice_s);
@@ -63,10 +55,12 @@ void Signature::Worker::Log(Signature::Queue &sigquue) {
         if (val->empty()) return;
         sigquue.pop();
         locker.unlock();
+
         boost::crc_32_type result;
         result.process_bytes(val->c_str(), val->length());
         std::cout<< std::hex << std::uppercase << result.checksum() << std::endl;
         m_ofstream << std::hex << std::uppercase << result.checksum() << std::endl;
+        if(m_ofstream.fail()) throw std::runtime_error("file write error.");
     }
 }
 
