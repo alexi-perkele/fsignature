@@ -13,7 +13,7 @@ namespace Signature
 class Worker
 {
     public:
-        Worker(const std::string&  filename, const size_t&  chunk_size);
+        Worker(const std::string& infile, const std::string& outfile, const size_t&  chunk_size);
         ~Worker();
         
         void Read(Queue &sigqueue);
@@ -22,6 +22,7 @@ class Worker
         
     private:
         std::ifstream m_instream;
+        std::ofstream m_ofstream;
         std::vector<char> m_buffer;
         size_t m_slice_s;
         std::mutex m_sigmutex;

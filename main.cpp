@@ -15,7 +15,7 @@ namespace po = boost::program_options;
 int main(int argc, char **argv) {
     
     po::options_description desc(
-        "\n File signature computation.\n Process file by chunks and get md5 of each"
+        "\n File signature computation.\n Process file by chunks and get crc32 of each"
     );
     desc.add_options()
         ("help", "help and description")
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     auto output_file = var_map["output"].as<std::string>();
     
     
-    std::unique_ptr<Signature::Worker> rdr(new Signature::Worker(input_file, block_size));
+    std::unique_ptr<Signature::Worker> rdr(new Signature::Worker(input_file, output_file, block_size));
 
     Signature::Queue sigqueue;
     std::vector<std::thread> threads;
