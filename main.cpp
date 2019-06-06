@@ -48,18 +48,29 @@ int main(int argc, char **argv) {
     auto input_file = var_map["file"].as<std::string>();
     auto block_size = var_map["size"].as<size_t>();
     auto output_file = var_map["output"].as<std::string>();
-    
-    
-    std::unique_ptr<Signature::Worker> rdr(new Signature::Worker(input_file, output_file, block_size));
 
     Signature::Queue sigqueue;
     std::vector<std::thread> threads;
 
-    threads.push_back(std::thread(&Signature::Worker::Read, rdr.get(), std::ref(sigqueue) ));
-    threads.push_back(std::thread(&Signature::Worker::Log, rdr.get(), std::ref(sigqueue) ));
+    try {
+        std::unique_ptr<Signature::Worker> rdr(new Signature::Worker(input_file, output_file, block_size));
+        threads.push_back(std::thread(&Signature::Worker::Read, rdr.get(), std::ref(sigqueue) ));
+        threads.push_back(std::thread(&Signature::Worker::Log, rdr.get(), std::ref(sigqueue) ));
 
-    std::for_each(threads.begin(), threads.end(),
-                  std::mem_fn(&std::thread::join));
+        std::for_each(threads.begin(), threads.end(),
+                      std::mem_fn(&std::thread::join));
+    }
+    catch(std::exception &e)
+    {
+        std::cout << e.what() << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+
+
+
+
+
 
     return 0;
 }

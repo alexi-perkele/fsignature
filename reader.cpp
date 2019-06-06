@@ -10,22 +10,20 @@ Signature::Worker::Worker(const std::string &infile, const std::string& outfile,
          , m_slice_s(chunk_size)
          , m_dataReady(false)
 {
-    try:
+    try
     {
         m_instream.open(infile, std::ifstream::binary);
         m_ofstream.open(outfile, std::ofstream::binary|std::ofstream::trunc);
     }
-    catch(...)
+    catch (std::ios_base::failure& e) {
+        std::cerr << e.what() << '\n';
+        throw;
+    }
+    catch(const std::exception& e)
     {
-        throw std::bad
+        std::cout << e.what() << std::endl;
+        throw;
     }
-
-
-    std::cout << "will read u all" << std::endl;//  m_buffer(m_slice_s, 0);
-    if (m_instream) {
-        std::cout << "File opened" << std::endl;
-    }
-
 }
 
 
@@ -35,10 +33,6 @@ void Signature::Worker::Read(Queue &sigqueue) {
     m_instream.seekg(0, m_instream.beg);
 
     std::cout << "File size: " << file_len << std::endl;
-
-    m_instream.is_open() ? std::cout << "OPEN" << std::endl : std::cout << "NOT OPEN" << std::endl;
-
-    //  std::unique_lock<std::mutex> locker(m_sigmutex, std::defer_lock);
 
     while (!m_instream.eof()) {
         m_instream.read(m_buffer.data(), m_slice_s);
@@ -51,11 +45,10 @@ void Signature::Worker::Read(Queue &sigqueue) {
         m_condVar.notify_one();
     }
 
+    std::lock_guard<std::mutex> lck(m_sigmutex);
     std::cout << "END OF FILE!!" << std::endl;
     std::unique_ptr<std::string> strPtr(new std::string());
-    std::lock_guard<std::mutex> lck(m_sigmutex);
     sigqueue.push(std::move(strPtr));
-
 }
 
 
