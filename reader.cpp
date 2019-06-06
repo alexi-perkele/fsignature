@@ -49,6 +49,7 @@ void Signature::Worker::Read(Queue &sigqueue) {
     std::cout << "END OF FILE!!" << std::endl;
     std::unique_ptr<std::string> strPtr(new std::string());
     sigqueue.push(std::move(strPtr));
+    m_condVar.notify_one();
 }
 
 
