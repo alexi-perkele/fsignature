@@ -9,7 +9,7 @@
 
 namespace Signature
 {
-    using Queue = std::queue<std::unique_ptr<std::string>>;
+    using Queue = std::queue<std::unique_ptr<std::vector<char>>>;
 class Worker
 {
     public:

@@ -27,19 +27,23 @@ Signature::Worker::Worker(const std::string &infile, const std::string& outfile,
 void Signature::Worker::Read(Queue &sigqueue) {
     std::cout << "file processing start" << std::endl;
     while (!m_instream.eof()) {
-        m_instream.read(m_buffer.data(), m_slice_s);
+        std::unique_ptr<std::vector<char>> vcPtr(new std::vector<char>(m_slice_s, 0));
 
-        std::unique_ptr<std::string> strPtr(new std::string(m_buffer.begin(), m_buffer.end()));
-        std::fill(m_buffer.begin(), m_buffer.end(), 0);
+        m_instream.read(vcPtr->data(), m_slice_s);   /// m_buffer.data()
+
+        //std::unique_ptr<std::string> strPtr(new std::string(m_buffer.begin(), m_buffer.end()));
+        //std::fill(m_buffer.begin(), m_buffer.end(), 0);
         std::lock_guard<std::mutex> lck(m_sigmutex);
-        sigqueue.push(std::move(strPtr));
+
+        sigqueue.push(std::move(vcPtr)); /// strPtr
         m_condVar.notify_one();
     }
 
     std::lock_guard<std::mutex> lck(m_sigmutex);
     std::cout << "file read done" << std::endl;
-    std::unique_ptr<std::string> strPtr(new std::string());
-    sigqueue.push(std::move(strPtr));
+    std::unique_ptr<std::vector<char>> vcPtr(new std::vector<char>());
+    //std::unique_ptr<std::string> strPtr(new std::string());
+    sigqueue.push(std::move(vcPtr)); // strPtr
     m_condVar.notify_one();
 }
 
@@ -55,10 +59,12 @@ void Signature::Worker::Log(Signature::Queue &sigquue) {
         locker.unlock();
 
         boost::crc_32_type result;
-        result.process_bytes(val->c_str(), val->length());
+        result.process_bytes(val->data(), val->size()); //c_str()
         m_ofstream << std::hex << std::uppercase << result.checksum() << std::endl;
         if(m_ofstream.fail()) throw std::runtime_error("file write error.");
+        //std::cout << "logging" << std::endl;
     }
+    std::cout << "logging end" << std::endl;
 }
 
 Signature::Worker::~Worker() {
